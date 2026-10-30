@@ -1,53 +1,18 @@
-﻿<?php
+<?php
 
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\LaporController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('lapor.create');
-});
+// ---------- Publik (warga) ----------
+Route::redirect('/', '/lapor');
+Route::get('/lapor', [LaporController::class, 'create'])->name('lapor.create');
+Route::post('/lapor', [LaporController::class, 'store'])->name('lapor.store');
 
-Route::get('/lapor', [LaporanController::class, 'create'])
-    ->name('lapor.create');
-
-Route::post('/lapor', [LaporanController::class, 'store'])
-    ->name('lapor.store');
-
-
-// Halaman konfirmasi laporan
-Route::get('/laporan/{laporan}/konfirmasi', [
-    LaporanController::class,
-    'konfirmasi'
-])->name('laporan.konfirmasi');
-
-Route::middleware('guest')->group(function () {
-    Route::get('/register', [RegisterController::class, 'show'])
-        ->name('register');
-
-    Route::post('/register', [RegisterController::class, 'store'])
-        ->name('register.store');
-
-    Route::get('/login', [LoginController::class, 'show'])
-        ->name('login');
-
-    Route::post('/login', [LoginController::class, 'authenticate'])
-        ->name('login.authenticate');
-});
-
+// ---------- Petugas (wajib login) ----------
 Route::middleware('auth')->group(function () {
-    Route::get('/laporan', [LaporanController::class, 'index'])
-        ->name('laporan.index');
-
-    Route::delete('/laporan/{laporan}', [LaporanController::class, 'destroy'])
-        ->name('laporan.destroy');
-
-    Route::get('/profil', [ProfilController::class, 'show'])
-        ->name('profil');
-
-    Route::post('/logout', [LoginController::class, 'logout'])
-        ->name('logout');
+    Route::resource('laporan', LaporanController::class)
+        ->except(['create', 'store']);   // create/store ada di form warga (/lapor)
 });
 
+require __DIR__.'/auth.php';

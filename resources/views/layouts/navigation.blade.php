@@ -21,14 +21,8 @@
                     @auth
                         <a href="{{ route('laporan.index') }}"
                            class="inline-flex items-center px-1 border-b-2 text-sm font-medium
-                           {{ request()->routeIs('laporan.index') ? 'border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                           {{ request()->routeIs('laporan.*') ? 'border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                             Daftar Laporan
-                        </a>
-
-                        <a href="{{ route('profil') }}"
-                           class="inline-flex items-center px-1 border-b-2 text-sm font-medium
-                           {{ request()->routeIs('profil') ? 'border-blue-500 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                            Profil
                         </a>
                     @endauth
                 </div>
@@ -40,11 +34,6 @@
                     <a href="{{ route('login') }}"
                        class="text-sm text-gray-600 hover:text-blue-700">
                         Login
-                    </a>
-
-                    <a href="{{ route('register') }}"
-                       class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
-                        Register
                     </a>
                 @else
                     <span class="text-sm text-gray-600">
@@ -95,11 +84,6 @@
                     Daftar Laporan
                 </a>
 
-                <a href="{{ route('profil') }}"
-                   class="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Profil
-                </a>
-
                 <div class="border-t border-gray-200 pt-3">
                     <p class="px-3 py-1 text-sm text-gray-500">
                         {{ Auth::user()->name }}
@@ -117,11 +101,6 @@
                 <a href="{{ route('login') }}"
                    class="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Login
-                </a>
-
-                <a href="{{ route('register') }}"
-                   class="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Register
                 </a>
             @endauth
         </div>

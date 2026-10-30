@@ -1,59 +1,49 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LaporBanjir – BPBD Kabupaten Bandung
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi Laravel 12 (+ Breeze) untuk menerima laporan banjir dari warga beserta foto bukti,
+dan mengelolanya oleh petugas (lihat, ubah status, ganti foto, hapus).
 
-## About Laravel
+## Cara menjalankan (XAMPP / Laragon)
+1. Nyalakan Apache + MySQL, buka phpMyAdmin, buat database **db_laporbanjir**.
+2. Di folder project:
+   ```bash
+   composer install
+   npm install && npm run build      # folder public/build sudah disertakan, langkah ini opsional
+   php artisan migrate:fresh --seed  # buat tabel + akun petugas
+   php artisan storage:link          # wajib agar foto bisa tampil
+   php artisan serve
+   ```
+   `.env` sudah memakai `DB_DATABASE=db_laporbanjir`, user `root`, password kosong.
+   Jika `.env` hilang: `cp .env.example .env && php artisan key:generate`.
+3. Buka `http://127.0.0.1:8000` (form warga) dan `/login` (petugas).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Akun petugas (PetugasSeeder): `admin@bpbd.test` / `admin12345` — ganti password ini sebelum dipakai sungguhan.
+Data contoh (12 laporan tanpa foto, untuk mencoba pagination): `php artisan db:seed --class=LaporanSeeder`.
+Menjalankan test: `php artisan test`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Peta ketentuan soal → kode
+| Ketentuan | Lokasi |
+|---|---|
+| a. Project & .env | `.env` (`DB_DATABASE=db_laporbanjir`) |
+| b. Model + migration | `app/Models/Laporan.php`, `database/migrations/*_create_laporan_table.php` |
+| c. Form + upload + validasi | `resources/views/lapor/create.blade.php`, `app/Http/Requests/LaporanRequest.php`, `LaporController@store` (`->store('laporan','public')`) |
+| d. CRUD petugas | `Route::resource('laporan', ...)` di `routes/web.php` dalam `middleware('auth')`, `LaporanController` |
+| e. Pengelolaan file | `LaporanController@update` & `@destroy` (`Storage::disk('public')->delete(...)`) |
+| f. Pesan & validasi | flash `success` di `layouts/app.blade.php`, `<x-input-error>` di bawah tiap input |
+| g. Breeze vs manual | bagian di bawah |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## g. Alasan memilih Laravel Breeze
+Autentikasi petugas adalah bagian yang paling rawan salah jika ditulis manual (hash password,
+perlindungan CSRF, regenerasi session saat login untuk mencegah session fixation, pembatasan
+percobaan login/throttling, logout yang menginvalidasi session). Breeze menyediakannya dalam bentuk
+kode Laravel biasa yang sudah teruji dan mudah dibaca (controller + Blade, bukan paket tertutup),
+sehingga waktu pengerjaan bisa difokuskan pada inti soal: upload file dan CRUD. Breeze juga
+menyediakan middleware `auth`/`guest` yang langsung dipakai untuk melindungi halaman pengelolaan.
+Dari scaffolding Breeze hanya login & logout yang dipakai; registrasi publik sengaja dihapus
+karena akun petugas BPBD harus dibuat oleh admin (seeder), bukan oleh sembarang orang yang
+dapat menghapus laporan.
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Catatan keamanan upload
+- Validasi `image|mimes:jpg,jpeg,png|max:2048` (2048 KB = 2 MB) — dicek di server, bukan hanya `accept` di HTML.
+- Nama file dibuat acak oleh `store()` sehingga nama asli dari pengguna tidak dipakai di server.
+- Foto lama dihapus setelah data baru berhasil tersimpan; foto ikut terhapus saat laporan dihapus.

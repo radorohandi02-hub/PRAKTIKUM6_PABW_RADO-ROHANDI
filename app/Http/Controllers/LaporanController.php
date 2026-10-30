@@ -2,43 +2,65 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LaporanRequest;
 use App\Models\Laporan;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
+/** Sisi petugas (middleware auth): index, show, edit, update, destroy. */
 class LaporanController extends Controller
 {
-    // Daftar laporan (dari database)
     public function index()
     {
-        $laporan = Laporan::all();
+        $laporan = Laporan::latest()->latest('id')->paginate(10);
 
         return view('laporan.index', compact('laporan'));
     }
 
-    // Form pelaporan
-    public function create()
+    public function show(Laporan $laporan)
     {
-        return view('laporan.form');
+        return view('laporan.show', compact('laporan'));
     }
 
-    // Simpan ke tabel laporan
-    public function store(Request $request)
+    public function edit(Laporan $laporan)
     {
-        $data = $request->validate([
-            'nama_pelapor'     => 'required|string|max:255',
-            'lokasi'           => 'required|string|max:255',
-            'tinggi_genangan'  => 'required|integer|min:0',
-            'tanggal_kejadian' => 'required|date',
-        ]);
-
-        $laporan = Laporan::create($data);
-
-        return redirect()->route('laporan.konfirmasi', $laporan);
+        return view('laporan.edit', compact('laporan'));
     }
 
-    // Halaman konfirmasi (pakai <x-alert>)
-    public function konfirmasi(Laporan $laporan)
+    public function update(LaporanRequest $request, Laporan $laporan)
     {
-        return view('laporan.konfirmasi', compact('laporan'));
+        $data = $request->validated();
+        $fotoLama = $laporan->foto;
+
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('laporan', 'public');
+        } else {
+            unset($data['foto']); // tidak ada upload baru -> pertahankan foto lama
+        }
+
+        $laporan->update($data);
+
+        // Hapus foto lama hanya setelah data baru berhasil tersimpan
+        if ($request->hasFile('foto') && $fotoLama) {
+            Storage::disk('public')->delete($fotoLama);
+        }
+
+        return redirect()
+            ->route('laporan.show', $laporan)
+            ->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    public function destroy(Laporan $laporan)
+    {
+        $foto = $laporan->foto;
+
+        $laporan->delete();
+
+        if ($foto) {
+            Storage::disk('public')->delete($foto);
+        }
+
+        return redirect()
+            ->route('laporan.index')
+            ->with('success', 'Laporan berhasil dihapus.');
     }
 }
